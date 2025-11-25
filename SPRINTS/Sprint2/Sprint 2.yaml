@@ -1,0 +1,470 @@
+openapi: 3.0.0
+info:
+  title: API AI3
+  version: 1.0.0
+  description: |
+    API de AI3 — gestão de utilizadores, recursos, avaliações e comentários.
+    As avaliações e os comentários são independentes: o utilizador pode deixar apenas um ou ambos.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor local.
+
+paths:
+  /auth/login:
+    post:
+      summary: Efetuar login
+      description: Permite que um aluno registado faça login no sistema.
+      tags:
+        - Autenticação
+      responses:
+        '200':
+          description: Login efetuado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  token: "jwt_token_aqui"
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Credenciais inválidas"
+
+  /auth/register:
+    post:
+      summary: Registar novo utilizador
+      description: Permite o registo de novos alunos.
+      tags:
+        - Autenticação
+      responses:
+        '201':
+          description: Utilizador registado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: "Utilizador criado"
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Dados inválidos"
+
+  /recursos:
+    get:
+      summary: Listar documentos disponíveis
+      description: Retorna todos os documentos públicos.
+      tags:
+        - Recursos
+      responses:
+        '200':
+          description: Lista de documentos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      summary: Fazer upload de um novo recurso
+      description: Envia um novo ficheiro (PDF, DOCX, PPTX, etc.)
+      tags:
+        - Recursos
+      responses:
+        '201':
+          description: Ficheiro criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: "Upload efetuado"
+        '400':
+          description: Ficheiro inválido ou tamanho excedido
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Ficheiro inválido"
+    put:
+      summary: Editar documento existente
+      description: Permite editar o nome do ficheiro (não o ficheiro em si).
+      tags:
+        - Recursos
+      responses:
+        '200':
+          description: Documento atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: "Atualizado com sucesso"
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Dados inválidos"
+        '404':
+          description: Documento não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Documento não encontrado"
+
+  /recursos/{id}:
+    get:
+      summary: Consultar um recurso específico
+      description: Retorna detalhes e metadados de um recurso pelo seu ID.
+      tags:
+        - Recursos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID do recurso
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recurso encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Não encontrado"
+    delete:
+      summary: Apagar recurso
+      description: Remove um recurso existente.
+      tags:
+        - Recursos
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Recurso eliminado
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Não encontrado"
+
+  /recursos/pesquisa:
+    get:
+      summary: Pesquisar recursos
+      description: Permite pesquisar por disciplina, tópico, tipo de material ou palavra-chave.
+      tags:
+        - Pesquisa
+      responses:
+        '200':
+          description: Resultados da pesquisa
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /avaliacoes:
+    get:
+      summary: Listar todas as avaliações
+      description: Retorna todas as avaliações registadas.
+      tags:
+        - Avaliações
+      responses:
+        '200':
+          description: Lista de avaliações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      summary: Criar nova avaliação
+      description: Permite avaliar um recurso (número de estrelas opcionalmente com comentário).
+      tags:
+        - Avaliações
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recursoId:
+                  type: integer
+                estrelas:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+              example:
+                recursoId: 12
+                estrelas: 4
+      responses:
+        '201':
+          description: Avaliação registada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: "Avaliação criada"
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Dados inválidos"
+
+  /avaliacoes/{id}:
+    get:
+      summary: Consultar uma avaliação específica
+      tags:
+        - Avaliações
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Avaliação encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Avaliação não encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Não encontrada"
+    put:
+      summary: Atualizar uma avaliação existente
+      tags:
+        - Avaliações
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                estrelas:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+      responses:
+        '200':
+          description: Avaliação atualizada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: "Atualizada"
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Dados inválidos"
+    delete:
+      summary: Apagar uma avaliação
+      tags:
+        - Avaliações
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Avaliação eliminada
+        '404':
+          description: Avaliação não encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Não encontrada"
+
+  /comentarios:
+    get:
+      summary: Listar todos os comentários
+      tags:
+        - Avaliações
+      responses:
+        '200':
+          description: Lista de comentários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+    post:
+      summary: Criar novo comentário
+      tags:
+        - Avaliações
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recursoId:
+                  type: integer
+                comentario:
+                  type: string
+              example:
+                recursoId: 12
+                comentario: "Material interessante e bem explicado."
+      responses:
+        '201':
+          description: Comentário criado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recursoId:
+                    type: integer
+                  comentario:
+                    type: string
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Dados inválidos"
+
+  /comentarios/{id}:
+    get:
+      summary: Consultar um comentário específico
+      tags:
+        - Avaliações
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Comentário encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Comentário não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Não encontrado"
+    put:
+      summary: Atualizar um comentário existente
+      tags:
+        - Avaliações
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comentario:
+                  type: string
+      responses:
+        '200':
+          description: Comentário atualizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: "Atualizado"
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Dados inválidos"
+    delete:
+      summary: Apagar um comentário
+      tags:
+        - Avaliações
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Comentário eliminado
+        '404':
+          description: Comentário não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: "Não encontrado"
