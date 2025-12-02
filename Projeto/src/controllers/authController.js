@@ -1,20 +1,15 @@
+import User from "../models/users.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/user.js";
 
+// POST /auth/register
 export const register = async (req, res) => {
   try {
     const { nome, email, email_institucional, password } = req.body;
 
-    // Verificar se todos os campos foram preenchidos
+    // Verificar se todos os campos vieram
     if (!nome || !email || !email_institucional || !password) {
       return res.status(400).json({ error: "Dados incompletos" });
-    }
-
-    // Verificar se o email tem o formato correto
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: "Email inválido" });
     }
 
     // Verificar se o utilizador já existe
@@ -41,6 +36,7 @@ export const register = async (req, res) => {
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 };
+
 // POST /auth/login
 export const login = async (req, res) => {
   try {
@@ -63,11 +59,11 @@ export const login = async (req, res) => {
       return res.status(401).json({ error: "Credenciais inválidas" });
     }
 
-    // Criar token JWT (expira em 20 minutos)
+    // Criar token JWT
     const token = jwt.sign(
       { id: user._id, email: user.email },  // dado que vai no token
       process.env.JWT_SECRET,              // segredo do .env
-      { expiresIn: "20m" }                 // Token expira em 20 minutos
+      { expiresIn: "7d" }
     );
 
     res.json({ token });
@@ -76,4 +72,8 @@ export const login = async (req, res) => {
     console.error("Erro no login:", err);
     res.status(500).json({ error: "Erro interno do servidor" });
   }
+
+  
+
+
 };
