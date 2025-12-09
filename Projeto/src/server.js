@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 // Rotas
 import authRoutes from "./routes/auth.js";
 import testeRoutes from "./routes/teste.js";
+import avaliacoesRouter from "./routes/avaliacoes.js";
 
 // Swagger
 import { swaggerUi, swaggerSpec } from "./swagger/swagger.js";
@@ -12,7 +13,7 @@ import { swaggerUi, swaggerSpec } from "./swagger/swagger.js";
 // Base de dados
 import { connectDB } from "./config/db.js";
 
-// Carregar variáveis de ambiente
+// Variáveis ambiente
 dotenv.config();
 
 // Criar app
@@ -22,14 +23,15 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// Rotas da aplicação
+// Rotas
 app.use("/auth", authRoutes);
-app.use("/recursos/:id/avaliacoes",avaliacoesrouter)
+app.use("/teste", testeRoutes);
+app.use("/recursos/:id/avaliacoes", avaliacoesRouter);
 
-// Swagger (apenas uma vez!)
+// Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Rota teste simples
+// Rota teste
 app.get("/", (req, res) => {
   res.json({ message: "API do Projeto a funcionar!" });
 });
@@ -41,7 +43,7 @@ connectDB();
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor a correr na porta ${PORT}`));
 
-//Middleware de tratamento de erros
+// Middleware de erros
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Erro interno do servidor" });

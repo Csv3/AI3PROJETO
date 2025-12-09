@@ -1,30 +1,17 @@
 import express from "express";
-import { criarComentario, listarComentarios } from "../controllers/comentariosController.js";
-//import { authMiddleware, authorize } from "../middleware/auth.js";
-
-
-import express from "express";
-import {
-    criarComentario,
-    listarComentarios,
-    editarComentario,
-    eliminarComentario
-} from "../controllers/comentariosController.js";
-
+import * as comentariosCtrl from "../controllers/comentariosController.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { sanitize, ownerOnly, checkCaptcha } from "../middleware/security.js";
 
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-// Criar comentário — autenticado
-router.post("/criar", authMiddleware, criarComentario);
+// criar comentário -> auth + captcha + sanitize
+router.post("/:id/comentarios", authMiddleware, checkCaptcha, sanitize, comentariosCtrl.create);
 
-// Listar comentários por recurso
-router.get("/:recursoId", listarComentarios);
+// editar comentário -> auth + ownerOnly
+router.put("/:id/comentarios/:comentarioId", authMiddleware, ownerOnly("comentario"), sanitize, comentariosCtrl.update);
 
-// Editar comentário — autenticado
-router.put("/:id", authMiddleware, editarComentario);
-
-// Eliminar comentário — autenticado
-router.delete("/:id", authMiddleware, eliminarComentario);
+// apagar comentário -> auth + ownerOnly
+router.delete("/:id/comentarios/:comentarioId", authMiddleware, ownerOnly("comentario"), comentariosCtrl.remove);
 
 export default router;

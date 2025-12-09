@@ -1,28 +1,20 @@
 import express from "express";
-import { criarAvaliacao, listarAvaliacoes } from "../controllers/avaliacoesController.js";
-//import { authMiddleware } from "../middleware/auth.js";
-import express from "express";
-import {
-  criarAvaliacao,
-  listarAvaliacoes,
-  editarAvaliacao,
-  eliminarAvaliacao
-} from "../controllers/avaliacoesController.js";
+import * as avaliacoesCtrl from "../controllers/avaliacoesController.js";
+import { authMiddleware } from "../middleware/auth.js";
+import { sanitize, ownerOnly, checkCaptcha } from "../middleware/security.js";
 
-import { authMiddleware, authorize } from "../middleware/auth.js";
+const router = express.Router({ mergeParams: true });
 
-const avaliacoesrouter = express.Router();
+// listar avaliações do recurso (público)
+router.get("/", avaliacoesCtrl.list);
 
-// Criar avaliação — precisa estar autenticado
-router.post("/", authMiddleware, criarAvaliacao);
+// criar avaliação (auth + sanitize + captcha)
+router.post("/", authMiddleware, checkCaptcha, sanitize, avaliacoesCtrl.create);
 
-// Listar avaliações — pode ser público ou protegido
-router.get("/", listarAvaliacoes);
+// editar avaliação (auth + ownerOnly)
+router.put("/:avaliacaoId", authMiddleware, ownerOnly("avaliacao"), sanitize, avaliacoesCtrl.update);
 
-// Editar avaliação — apenas user autenticado
-router.put("/:avaliacoesid", authMiddleware, editarAvaliacao);
-
-// Eliminar avaliação — apenas user autenticado
-router.delete("/:avaliacoesid", authMiddleware, eliminarAvaliacao);
+// apagar avaliação (auth + ownerOnly)
+router.delete("/:avaliacaoId", authMiddleware, ownerOnly("avaliacao"), avaliacoesCtrl.remove);
 
 export default router;

@@ -1,12 +1,11 @@
 import express from "express";
 import { register, login } from "../controllers/authController.js";
-import { authMiddleware, authorize } from "../middleware/auth.js";
+import { sanitize, checkCaptcha } from "../middleware/security.js";
+import { middleware } from "../middleware/auth.js"; // se necessário
+
 const router = express.Router();
 
-/** Registo */
-router.post("/register", register);
-
-/** Login */
-router.post("/login", login);
+router.post("/register", checkCaptcha, sanitize, register); // ou "/registo" conforme o teu router
+router.post("/login", checkCaptcha, sanitize, login);
 
 export default router;

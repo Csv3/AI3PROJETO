@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Recursos</title>
+</head>
+<body>
+  <h2>Lista de Recursos</h2>
+  <button onclick="carregar()">Carregar Recursos</button>
+  <ul id="lista"></ul>
+
+  <script>
+    async function carregar() {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("http://localhost:3000/recursos", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+
+      const data = await res.json();
+
+      const ul = document.getElementById("lista");
+      ul.innerHTML = "";
+
+      data.forEach(r => {
+        const li = document.createElement("li");
+        li.textContent = r.titulo + " — " + r.descricao;
+        ul.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
