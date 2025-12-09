@@ -24,7 +24,7 @@ app.use(cors());
 
 // Rotas da aplicação
 app.use("/auth", authRoutes);
-app.use("/teste", testeRoutes);
+app.use("/recursos/:id/avaliacoes",avaliacoesrouter)
 
 // Swagger (apenas uma vez!)
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -40,3 +40,9 @@ connectDB();
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor a correr na porta ${PORT}`));
+
+//Middleware de tratamento de erros
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Erro interno do servidor" });
+});

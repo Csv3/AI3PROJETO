@@ -4,7 +4,7 @@ import { registerResource } from "../controllers/recursosController.js";
         //nome da funçao 
 const router = express.Router();
 
-router.post("/register", registerResource);
+router.post("/", registerResource);
                         //nome da funçao
 
 export default router;

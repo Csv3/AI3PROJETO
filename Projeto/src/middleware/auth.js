@@ -17,13 +17,19 @@ export const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // ex: { id, role }
+    req.user = decoded; // ex: { id, email }
     next();
   } catch (err) {
     return res.status(401).json({ error: "Token inválido ou expirado" });
   }
 };
-
+//Verificar se o utilizador é o mesmo que está a tentar aceder ou alterar os seus dados
+export const sameUser = (req, res, next) => {
+  if (req.user.id !== req.params.id && req.user.role !== "autenticado") {
+    return res.status(403).json({ error: "Não tens permissão para alterar este perfil" });
+  }
+  next();
+};
 
 // Middleware: verificar permissões (roles)
 export const authorize = (...allowedRoles) => {

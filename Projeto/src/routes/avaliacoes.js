@@ -11,18 +11,18 @@ import {
 
 import { authMiddleware, authorize } from "../middleware/auth.js";
 
-const router = express.Router();
+const avaliacoesrouter = express.Router();
 
 // Criar avaliação — precisa estar autenticado
-router.post("/criar", authMiddleware, criarAvaliacao);
+router.post("/", authMiddleware, criarAvaliacao);
 
 // Listar avaliações — pode ser público ou protegido
 router.get("/", listarAvaliacoes);
 
 // Editar avaliação — apenas user autenticado
-router.put("/:id", authMiddleware, editarAvaliacao);
+router.put("/:avaliacoesid", authMiddleware, editarAvaliacao);
 
 // Eliminar avaliação — apenas user autenticado
-router.delete("/:id", authMiddleware, eliminarAvaliacao);
+router.delete("/:avaliacoesid", authMiddleware, eliminarAvaliacao);
 
 export default router;
