@@ -5,16 +5,27 @@ import { sanitize, ownerOnly, checkCaptcha } from "../middleware/security.js";
 
 const router = express.Router({ mergeParams: true });
 
-// listar avaliações do recurso (público)
-router.get("/", avaliacoesCtrl.list);
+// LISTAR avaliações do recurso (público)
+router.get("/", avaliacoesCtrl.listarAvaliacoes);
 
-// criar avaliação (auth + sanitize + captcha)
-router.post("/", authMiddleware, checkCaptcha, sanitize, avaliacoesCtrl.create);
+// CRIAR avaliação (auth + sanitize + captcha)
+router.post("/", authMiddleware, checkCaptcha, sanitize, avaliacoesCtrl.criarAvaliacao);
 
-// editar avaliação (auth + ownerOnly)
-router.put("/:avaliacaoId", authMiddleware, ownerOnly("avaliacao"), sanitize, avaliacoesCtrl.update);
+// EDITAR avaliação (auth + ownerOnly)
+router.put(
+  "/:id",
+  authMiddleware,
+  ownerOnly("avaliacao"),
+  sanitize,
+  avaliacoesCtrl.editarAvaliacao
+);
 
-// apagar avaliação (auth + ownerOnly)
-router.delete("/:avaliacaoId", authMiddleware, ownerOnly("avaliacao"), avaliacoesCtrl.remove);
+// APAGAR avaliação (auth + ownerOnly)
+router.delete(
+  "/:id",
+  authMiddleware,
+  ownerOnly("avaliacao"),
+  avaliacoesCtrl.eliminarAvaliacao
+);
 
 export default router;
