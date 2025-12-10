@@ -6,7 +6,7 @@ export default function Navbar() {
       <Link to="/">🏠 Home</Link>
       <Link to="/login">🔐 Login</Link>
       <Link to="/recursos">📄 Recursos</Link>
-      <Link to="/criar">➕ Criar Avaliação</Link>
+      <Link to="/criaravaliacao">➕ Criar Avaliação</Link>
     </nav>
   );
 }

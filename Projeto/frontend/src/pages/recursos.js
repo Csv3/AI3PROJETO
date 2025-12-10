@@ -12,7 +12,7 @@ export default function Recursos() {
 
   return (
     <div>
-      <h2>Lista de Recursos</h2>
+      <h2>a bunda la caca de Recursos</h2>
 
       <button onClick={carregar}>Carregar Recursos</button>
 
