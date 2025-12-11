@@ -1,88 +1,93 @@
-import Resource from "../models/Resource.js";
+// src/controllers/recursosController.js
+import Resource from "../models/Resource.js"; 
 
-// POST para criar um novo recurso (pasta)
-export const createResource = async (req, res) => {
-  try {
-    const { titulo, descricao, tags, itens = [] } = req.body;
-
-    if (!titulo || !descricao || !tags) {
-      return res.status(400).json({ error: "Título, descrição e tags são obrigatórios" });
+// GET /recursos
+export const list = async (req, res) => {
+    try {
+        const recursos = await Resource.find({});
+        res.status(200).json(recursos);
+    } catch (err) {
+        console.error("Erro ao listar recursos:", err);
+        res.status(500).json({ error: "Erro interno do servidor" });
     }
-
-    // Criar o recurso (pasta)
-    const newResource = await Resource.create({
-      titulo,
-      descricao,
-      tags,
-      itens, // Pode ser uma lista vazia
-    });
-
-    res.status(201).json({ message: "Recurso criado", resource: newResource });
-  } catch (err) {
-    console.error("Erro ao criar recurso:", err);
-    res.status(500).json({ error: "Erro interno do servidor" });
-  }
 };
 
+// POST /recursos (PROEGIDO)
+export const create = async (req, res) => {
+    try {
+        // Os campos do frontend (Recursos.js)
+        const { nome_recurso, tipo_recurso, nome_utilizador } = req.body;
+        
+        if (!nome_recurso || !tipo_recurso || !nome_utilizador) {
+            console.error("ERRO: Dados incompletos para criação de recurso. Body:", req.body);
+            return res.status(400).json({ error: "Dados incompletos: nome, tipo e utilizador são obrigatórios." });
+        }
 
-// POST para upload de um único ficheiro
-export const uploadFile = async (req, res) => {
-  try {
-    const { tipo, titulo } = req.body;
-    const file = req.file;  // Acessar o ficheiro enviado
+        // Tenta criar e salvar no MongoDB
+        const novoRecurso = await Resource.create({
+            nome_utilizador,
+            nome_recurso,
+            tipo_recurso
+        });
+        
+        res.status(201).json({ 
+            message: "Recurso criado com sucesso", 
+            resource: novoRecurso, 
+            resourceId: novoRecurso._id 
+        });
 
-    if (!file || !titulo || !tipo) {
-      return res.status(400).json({ error: "Ficheiro, título e tipo são obrigatórios" });
+    } catch (err) {
+        // 🚨 PONTO CHAVE: Reporta o erro exato do Mongoose/BD
+        console.error("❌ ERRO GRAVE ao salvar recurso no MongoDB (Create):", err.message);
+        res.status(500).json({ error: `Erro interno do servidor: ${err.message}` });
     }
-
-    // Criar o recurso (ficheiro) no banco
-    const newFile = await Resource.create({
-      titulo,
-      tipo,
-      fileUrl: file.path,  // Guarda o ficheiro na pasta e assim não fica solto/individual
-    });
-
-    res.status(201).json({ message: "Ficheiro carregado", file: newFile });
-
-  } catch (err) {
-    console.error("Erro ao fazer upload:", err);
-    res.status(500).json({ error: "Erro interno do servidor" });
-  }
 };
-// POST /recursos/register
-export const registerResource = async (req, res) => {
-  try {
-    const { nome_utilizador, nome_recurso, tipo_recurso } = req.body;
 
-    // Verificar se todos os campos foram enviados
-    if (!nome_utilizador || !nome_recurso || !tipo_recurso) {
-      return res.status(400).json({ error: "Dados incompletos" });
+// PUT /recursos/:id (PROTEGIDO + ownerOnly)
+export const update = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nome_recurso, tipo_recurso, nome_utilizador } = req.body;
+        
+        // Assumimos que o middleware de permissão foi executado
+
+        const updatedResource = await Resource.findByIdAndUpdate(
+            id,
+            { nome_recurso, tipo_recurso, nome_utilizador },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedResource) {
+            return res.status(404).json({ error: "Recurso não encontrado ou sem permissão." });
+        }
+
+        res.status(200).json({ message: "Recurso atualizado", resource: updatedResource });
+
+    } catch (err) {
+        console.error("❌ ERRO GRAVE ao salvar recurso no MongoDB (Update):", err.message);
+        res.status(500).json({ error: `Erro interno do servidor: ${err.message}` });
     }
-
-    // Verificar se já existe um recurso com o mesmo nome para o mesmo utilizador
-    const recursoExiste = await Resource.findOne({
-      nome_recurso,
-      nome_utilizador
-    });
-
-    if (recursoExiste) {
-      return res.status(400).json({ error: "Recurso já registado por este utilizador" });
-    }
-
-    // Criar novo recurso
-    const novoRecurso = await Resource.create({
-      nome_utilizador,
-      nome_recurso,
-      tipo_recurso
-    });
-
-    return res.status(201).json({
-      message: "Recurso criado com sucesso",
-      resourceId: novoRecurso._id
-    });
-
-  } catch (err) {
-    console.error("Erro ao criar recurso:", err);
-    return res.status(500).json({ error: "Erro interno do servidor" });
-  }
 };
+
+// DELETE /recursos/:id (PROTEGIDO + ownerOnly)
+export const remove = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Assumimos que o middleware de permissão foi executado
+        
+        const result = await Resource.findByIdAndDelete(id);
+
+        if (!result) {
+            return res.status(404).json({ error: "Recurso não encontrado ou sem permissão." });
+        }
+
+        res.status(204).send(); 
+
+    } catch (err) {
+        console.error("❌ ERRO GRAVE ao apagar recurso no MongoDB:", err.message);
+        res.status(500).json({ error: `Erro interno do servidor: ${err.message}` });
+    }
+};
+
+// Se tiver outras funções (como getById, etc.), adicione-as aqui.

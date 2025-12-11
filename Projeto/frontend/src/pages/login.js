@@ -16,7 +16,7 @@ export default function Login() {
 
     try {
       // 2. Chama a função de login na sua API (sem enviar o token CAPTCHA)
-      const data = await api.LOGIN(email, password); 
+      const data = await api.login(email, password); 
 
       // 3. Trata a resposta do backend
       if (data.token) {

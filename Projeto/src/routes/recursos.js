@@ -1,21 +1,21 @@
 import express from "express";
 import * as recursosCtrl from "../controllers/recursosController.js";
 import { authMiddleware } from "../middleware/auth.js";
-import { sanitize, ownerOnly, checkCaptcha } from "../middleware/security.js";
+import { sanitize, ownerOnly } from "../middleware/security.js"; // Mantenho ownerOnly para referência
 
 const router = express.Router();
 
-// listar / ver detalhes = público
-router.get("/", recursosCtrl.list);
-router.get("/:id", recursosCtrl.getById);
+// LISTAR (GET /): Decidiu-se manter pública, mas pode protegê-la se quiser.
+router.get("/", recursosCtrl.list); 
+router.get("/:id", recursosCtrl.getById); // Se existir
 
-// criar recurso -> autenticação + sanitize (+ opcional captcha)
+// CRIAR (POST /): DEVE SER PROTEGIDA
 router.post("/", authMiddleware, sanitize, recursosCtrl.create);
 
-// editar recurso -> autenticação + ownerOnly + sanitize
-router.put("/:id", authMiddleware, ownerOnly("recurso"), sanitize, recursosCtrl.update);
+// EDITAR (PUT /:id): DEVE SER PROTEGIDA
+router.put("/:id", authMiddleware, ownerOnly("resource"), sanitize, recursosCtrl.update); 
 
-// apagar recurso -> autenticação + ownerOnly
-router.delete("/:id", authMiddleware, ownerOnly("recurso"), recursosCtrl.remove);
+// APAGAR (DELETE /:id): DEVE SER PROTEGIDA
+router.delete("/:id", authMiddleware, ownerOnly("resource"), recursosCtrl.remove); 
 
 export default router;

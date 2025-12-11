@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/";
+const API_URL = "http://localhost:5000";
 
 export const api = {
   login: async (email, password) => {
@@ -18,20 +18,15 @@ export const api = {
   },
 
   REGISTER: async (name, email, password) => {
-    const res = await fetch(`${API_URL}/auth/registo`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name, // ⬅️ O seu backend deve esperar este campo
-        email,
-        password
-      })
+    const res = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password })
     });
     return res.json();
   },
-
   criarAvaliacao: async (token, recursoId, payload) => {
     const res = await fetch(`${API_URL}/recursos/${recursoId}/avaliacoes`, {
       method: "POST",

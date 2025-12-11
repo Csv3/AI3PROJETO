@@ -1,79 +1,96 @@
+// src/controllers/authController.js (CORRIGIDO PARA O MODELO ATUAL)
 import User from "../models/users.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 // POST /auth/register
 export const register = async (req, res) => {
-  try {
-    const { nome, email, email_institucional, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
+    
+    // Campos ausentes no frontend, mas necessários no modelo:
+    const numero_canografico = "";
+    const curso = "";
+    
+    // Verificar se os campos obrigatórios básicos vieram
+    if (!name || !email || !password) { 
+      return res.status(400).json({ error: "Dados incompletos: nome, email e password são obrigatórios." });
+    }
 
-    // Verificar se todos os campos vieram
-    if (!nome || !email || !email_institucional || !password) {
-      return res.status(400).json({ error: "Dados incompletos" });
-    }
+    // Verificar se o utilizador já existe
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ error: "Email já está registado" });
+    }
 
-    // Verificar se o utilizador já existe
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ error: "Email já está registado" });
-    }
+    // Encriptar password
+    const hashedPwd = await bcrypt.hash(password, 10);
 
-    // Encriptar password
-    const hashedPwd = await bcrypt.hash(password, 10);
+    // Criar utilizador
+    const newUser = await User.create({
+      nome: name, // Mapeia 'name' do frontend para 'nome' do modelo
+      email,
+      password: hashedPwd,
+      // 💡 ADICIONADO: Envia strings vazias para evitar erros no Mongoose
+      numero_canografico, 
+      curso 
+    });
 
-    // Criar utilizador
-    const newUser = await User.create({
-      nome,
-      email,
-      email_institucional,
-      password: hashedPwd
-    });
+    res.status(201).json({ message: "Utilizador criado", userId: newUser._id });
 
-    res.status(201).json({ message: "Utilizador criado", userId: newUser._id });
-
-  } catch (err) {
-    console.error("Erro no registo:", err);
-    res.status(500).json({ error: "Erro interno do servidor" });
-  }
+  } catch (err) {
+    console.error("Erro no registo (Mongoose/Modelo):", err);
+    res.status(500).json({ error: "Erro interno do servidor durante a criação do utilizador." });
+  }
 };
+
+// src/controllers/authController.js (Implementação da Função de Login)
+
+// ... imports e função register ...
 
 // POST /auth/login
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body; // 1. Recebe credenciais
 
-    // Verificar campos
+    // Validação básica
     if (!email || !password) {
-      return res.status(400).json({ error: "Email e password são obrigatórios" });
+      return res.status(400).json({ error: "Email e password são obrigatórios." });
     }
 
-    // Procurar utilizador
+    // 2. Encontra o utilizador pelo email
     const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(401).json({ error: "Credenciais inválidas" });
+      // Usar uma mensagem genérica para não dar dicas a atacantes
+      return res.status(401).json({ error: "Credenciais inválidas." }); 
     }
 
-    // Comparar password
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      return res.status(401).json({ error: "Credenciais inválidas" });
+    // 3. Compara a password fornecida com a armazenada
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Credenciais inválidas." });
     }
 
-    // Criar token JWT
+    // 4. Se a password for válida, gera um JWT
+    // Use uma chave secreta do seu .env (process.env.JWT_SECRET)
+    const secret = process.env.JWT_SECRET || 'SUA_CHAVE_SECRETA_PADRAO'; 
     const token = jwt.sign(
-      { id: user._id, email: user.email },  // dado que vai no token
-      process.env.JWT_SECRET,              // segredo do .env
-      { expiresIn: "7d" }
+      { userId: user._id, email: user.email }, // Payload do token
+      secret,
+      { expiresIn: '1d' } // Expira em 1 dia
     );
 
-    res.json({ token });
+    // 5. Envia o token de volta ao cliente
+    res.status(200).json({ 
+      message: "Login bem-sucedido",
+      token, // O frontend (Login.js) espera este campo!
+      userId: user._id 
+    });
 
   } catch (err) {
     console.error("Erro no login:", err);
-    res.status(500).json({ error: "Erro interno do servidor" });
+    res.status(500).json({ error: "Erro interno do servidor." });
   }
-
-  
-
-
 };
