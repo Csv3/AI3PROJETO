@@ -1,21 +1,41 @@
 import express from "express";
-import * as recursosCtrl from "../controllers/recursosController.js";
-import { authMiddleware } from "../middleware/auth.js";
-import { sanitize, ownerOnly } from "../middleware/security.js"; // Mantenho ownerOnly para referência
+import multer from "multer";
+import { list, create, update, remove, uploadFile } from "../controllers/recursosController.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// LISTAR (GET /): Decidiu-se manter pública, mas pode protegê-la se quiser.
-router.get("/", recursosCtrl.list); 
-router.get("/:id", recursosCtrl.getById); // Se existir
+// -----------------------------
+// MULTER - Configuração Upload
+// -----------------------------
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
+});
 
-// CRIAR (POST /): DEVE SER PROTEGIDA
-router.post("/", authMiddleware, sanitize, recursosCtrl.create);
+const upload = multer({ storage });
 
-// EDITAR (PUT /:id): DEVE SER PROTEGIDA
-router.put("/:id", authMiddleware, ownerOnly("resource"), sanitize, recursosCtrl.update); 
+// -----------------------------
+// ROTAS
+// -----------------------------
 
-// APAGAR (DELETE /:id): DEVE SER PROTEGIDA
-router.delete("/:id", authMiddleware, ownerOnly("resource"), recursosCtrl.remove); 
+// GET /recursos
+router.get("/", authMiddleware, list);
+
+// POST /recursos (JSON)
+router.post("/", authMiddleware, create);
+
+// POST /recursos/upload (FormData + Ficheiro)
+router.post("/upload", authMiddleware, upload.single("ficheiro"), uploadFile);
+
+// PUT /recursos/:id
+router.put("/:id", authMiddleware, update);
+
+// DELETE /recursos/:id
+router.delete("/:id", authMiddleware, remove);
 
 export default router;
