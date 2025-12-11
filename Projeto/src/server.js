@@ -12,38 +12,45 @@ import { connectDB } from "./config/db.js";
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
-app.use(cors());
+// -----------------------------
+// MIDDLEWARES
+// -----------------------------
+app.use(cors()); // Permite requests do frontend
+app.use(express.json()); // Para JSON
+app.use("/uploads", express.static("uploads")); // Serve arquivos enviados
 
-// --- ROTAS ---
+// -----------------------------
+// ROTAS
+// -----------------------------
 app.use("/auth", authRoutes);
 
-// ⚠️ PRIMEIRO as rotas gerais
+// ⚠️ Rotas gerais primeiro
 app.use("/recursos", recursosRoutes);
 
-// ⚠️ Depois as rotas com parâmetros
+// Rotas com parâmetros depois
 app.use("/recursos/:id/avaliacoes", avaliacoesRouter);
 
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Teste
-app.get("/", (req, res) => {
-  res.json({ message: "API do Projeto a funcionar!" });
-});
+// Rota teste
+app.get("/", (req, res) => res.json({ message: "API do Projeto a funcionar!" }));
 
-// Conectar BD
-connectDB();
-
-// Iniciar servidor
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Servidor a correr na porta ${PORT}`));
-
+// -----------------------------
 // Middleware de erros
+// -----------------------------
 app.use((err, req, res, next) => {
   console.error("ERRO GLOBAL:", err.stack);
   res.status(500).json({ error: "Erro interno do servidor" });
 });
 
-export default app;
+// -----------------------------
+// CONEXÃO COM DB E INÍCIO DO SERVIDOR
+// -----------------------------
+connectDB().then(() => {
+  app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+}).catch(err => {
+  console.error("Erro ao conectar ao DB:", err);
+});
