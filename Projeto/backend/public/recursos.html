@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <title>Recursos</title>
+</head>
+
+<body>
+    <h2>Recursos</h2>
+    <div id='list'></div>
+    <form id='createForm'><input name='titulo' placeholder='Título' /><br /><textarea name='descricao'
+            placeholder='Descrição'></textarea><br /><input name='categoria'
+            placeholder='Categoria' /><br /><button>Crear</button></form>
+    <script>const API = 'http://localhost:5000'; async function load() { const r = await fetch(API + '/recursos'); const j = await r.json(); const el = document.getElementById('list'); el.innerHTML = ''; j.forEach(x => { const d = document.createElement('div'); d.innerHTML = `<h3>${x.titulo}</h3><p>${x.descricao}</p><small>${x.categoria}</small>`; el.appendChild(d); }); } document.getElementById('createForm').addEventListener('submit', async e => { e.preventDefault(); const f = new FormData(e.target); const body = { titulo: f.get('titulo'), descricao: f.get('descricao'), categoria: f.get('categoria') }; const token = localStorage.getItem('token'); const res = await fetch(API + '/recursos', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) }); if (res.ok) { load(); } else { alert('Error'); } }); load();</script>
+</body>
+
+</html>

@@ -1,0 +1,1001 @@
+openapi: 3.0.3
+info:
+  title: Plataforma de Recursos Académicos
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:5000
+
+paths:
+
+  ############################################
+  # AUTENTICAÇÃO
+  ############################################
+
+  /auth/register:
+    post:
+      summary: Criar conta de utilizador
+      tags: [Autenticação]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterInput'
+      responses:
+        '201':
+          description: Utilizador registado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+  /auth/login:
+    post:
+      summary: Iniciar sessão
+      tags: [Autenticação]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                example:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Credenciais inválidas ou reCAPTCHA inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+
+  ############################################
+  # UTILIZADORES
+  ############################################
+
+  /users/me:
+    get:
+      summary: Obter perfil do utilizador autenticado
+      tags: [Utilizadores]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil do utilizador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    put:
+      summary: Atualizar perfil do utilizador autenticado
+      tags: [Utilizadores]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPublic'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+
+  ############################################
+  # CRUD — RECURSOS
+  ############################################
+
+  /recursos:
+    get:
+      summary: Listar recursos
+      description: Lista de recursos disponíveis para consulta. Não requer autenticação.
+      tags: [Recursos]
+      parameters:
+        - name: tipo
+          in: query
+          description: Filtrar por tipo de recurso (ex individual, album)
+          schema:
+            type: string
+        - name: categoria
+          in: query
+          description: Filtrar por categoria
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de recursos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourceMetadata'
+        '400':
+          description: Parâmetros de pesquisa inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    post:
+      summary: Criar recurso
+      description: Cria um novo recurso. Requer autenticação.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecursoInput'
+      responses:
+        '201':
+          description: Recurso criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceMetadata'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+  /recursos/upload:
+    post:
+      summary: Upload de ficheiro para recurso
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload bem-sucedido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  filename:
+                    type: string
+        '400':
+          description: Ficheiro inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+  /recursos/{id}:
+    get:
+      summary: Obter recurso com dados completos
+      description: Consulta pública de um recurso específico.
+      tags: [Recursos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+      responses:
+        '200':
+          description: Recurso encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceMetadata'
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    put:
+      summary: Atualizar recurso
+      description: Atualiza os dados de um recurso. Requer autenticação e permissões.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecursoInput'
+      responses:
+        '200':
+          description: Recurso atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceMetadata'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Proibido (sem permissões para editar este recurso)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    delete:
+      summary: Apagar recurso
+      description: Apaga um recurso. Requer autenticação e permissões.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+      responses:
+        '204':
+          description: Recurso eliminado
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Proibido (sem permissões para apagar este recurso)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+
+  ############################################
+  # PESQUISA DE RECURSOS
+  ############################################
+
+  /recursos/pesquisa:
+    get:
+      summary: Pesquisar recursos
+      description: Pesquisa por palavra-chave, tags, tipo, datas, etc. Público (não requer login).
+      tags: [Pesquisa]
+      parameters:
+        - name: q
+          in: query
+          description: Palavra-chave de pesquisa
+          schema:
+            type: string
+        - name: tags
+          in: query
+          description: Tags separadas por vírgula
+          schema:
+            type: string
+        - name: tipo
+          in: query
+          description: Tipo de recurso (por exemplo individual, album)
+          schema:
+            type: string
+        - name: data_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: data_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Resultados da pesquisa
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourceMetadata'
+        '400':
+          description: Parâmetros de pesquisa inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+
+  ############################################
+  # AVALIAÇÕES — DENTRO DE RECURSOS
+  ############################################
+
+  /recursos/{id}/avaliacoes:
+    get:
+      summary: Listar avaliações do recurso
+      description: Consulta pública das avaliações associadas a um recurso.
+      tags: [Recursos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+      responses:
+        '200':
+          description: Lista de avaliações
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evaluation'
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    post:
+      summary: Criar avaliação
+      description: Cria uma avaliação para o recurso. Requer autenticação.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvaliacaoInput'
+      responses:
+        '201':
+          description: Avaliação criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+  /recursos/{id}/avaliacoes/{avaliacaoId}:
+    put:
+      summary: Editar avaliação
+      description: Edita uma avaliação existente. Requer autenticação e permissões.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+        - name: avaliacaoId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId da avaliação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvaliacaoInput'
+      responses:
+        '200':
+          description: Avaliação atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evaluation'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Proibido (sem permissões para editar esta avaliação)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Avaliação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    delete:
+      summary: Apagar avaliação
+      description: Apaga uma avaliação. Requer autenticação e permissões.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+        - name: avaliacaoId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId da avaliação
+      responses:
+        '204':
+          description: Avaliação eliminada
+        '400':
+          description: IDs inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Proibido (sem permissões para apagar esta avaliação)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Avaliação não encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+
+  ############################################
+  # COMENTÁRIOS — DENTRO DE RECURSOS
+  ############################################
+
+  /recursos/{id}/comentarios:
+    get:
+      summary: Listar comentários do recurso
+      description: Consulta pública dos comentários associados a um recurso.
+      tags: [Recursos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+      responses:
+        '200':
+          description: Lista de comentários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '400':
+          description: ID inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    post:
+      summary: Criar comentário
+      description: Cria um comentário associado ao recurso. Requer autenticação.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComentarioInput'
+      responses:
+        '201':
+          description: Comentário criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Recurso não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+  /recursos/{id}/comentarios/{comentarioId}:
+    put:
+      summary: Editar comentário
+      description: Edita um comentário existente. Requer autenticação e permissões.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+        - name: comentarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do comentário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ComentarioInput'
+      responses:
+        '200':
+          description: Comentário atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Dados inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Proibido (sem permissões para editar este comentário)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Comentário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+    delete:
+      summary: Apagar comentário
+      description: Apaga um comentário. Requer autenticação e permissões.
+      tags: [Recursos]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do recurso
+        - name: comentarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            description: ObjectId do comentário
+      responses:
+        '204':
+          description: Comentário eliminado
+        '400':
+          description: IDs inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Não autorizado (token em falta ou inválido)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Proibido (sem permissões para apagar este comentário)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Comentário não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/Generic500'
+
+
+
+# COMPONENTES
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Generic500:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+
+    # AUTENTICAÇÃO
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        recaptchaToken:
+          type: string
+          description: Token do reCAPTCHA gerado no frontend
+
+    RegisterInput:
+      type: object
+      required: [nome, email, password]
+      properties:
+        nome:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    
+    # UTILIZADOR (apenas campos públicos)
+    UserPublic:
+      type: object
+      properties:
+        id:
+          type: string
+        nome:
+          type: string
+        email:
+          type: string
+        email_institucional:
+          type: string
+        numero_canografico:
+          type: string
+        curso:
+          type: string
+      required:
+        - nome
+        - email
+
+    UserUpdate:
+      type: object
+      properties:
+        nome:
+          type: string
+        email:
+          type: string
+        email_institucional:
+          type: string
+        numero_canografico:
+          type: string
+        curso:
+          type: string
+
+    RecursoInput:
+      type: object
+      required: [titulo, descricao, categoria]
+      properties:
+        titulo:
+          type: string
+        descricao:
+          type: string
+        categoria:
+          type: string
+
+    ResourceMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+        titulo:
+          type: string
+        descricao:
+          type: string
+        categoria:
+          type: string
+        ownerId:
+          type: string
+          description: ObjectId do utilizador que criou o recurso
+        criado_em:
+          type: string
+          format: date-time
+        atualizado_em:
+          type: string
+          format: date-time
+
+    AvaliacaoInput:
+      type: object
+      required: [estrelas]
+      properties:
+        estrelas:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comentario:
+          type: string
+
+    Evaluation:
+      type: object
+      properties:
+        id:
+          type: string
+        estrelas:
+          type: integer
+        comentario:
+          type: string
+        criado_em:
+          type: string
+          format: date-time
+
+    ComentarioInput:
+      type: object
+      required: [comentario]
+      properties:
+        comentario:
+          type: string
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        comentario:
+          type: string
+        userId:
+          type: string
+        criado_em:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string

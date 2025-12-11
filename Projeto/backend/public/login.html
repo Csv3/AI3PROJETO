@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <title>Login</title>
+</head>
+
+<body>
+    <h2>Login</h2>
+    <form id='loginForm'><input name='email' placeholder='Email' /><br /><input name='password' type='password'
+            placeholder='Password' /><br /><button>Login</button></form>
+    <script>const API = 'http://localhost:5000'; document.getElementById('loginForm').addEventListener('submit', async (e) => { e.preventDefault(); const f = new FormData(e.target); const body = { email: f.get('email'), password: f.get('password') }; const res = await fetch(API + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const j = await res.json(); if (res.ok) { localStorage.setItem('token', j.token); alert('Logged'); window.location = '/recursos.html'; } else alert(j.error || 'Error'); });</script>
+</body>
+
+</html>
