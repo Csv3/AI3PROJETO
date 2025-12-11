@@ -2,7 +2,7 @@
 
 import express from "express";
 import { register, login } from "../controllers/authController.js";
-// import { sanitize, checkCaptcha } from "../middleware/security.js"; // ⬅️ COMENTE OU REMOVA ESTA LINHA
+
 
 const router = express.Router();
 

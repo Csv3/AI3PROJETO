@@ -6,7 +6,7 @@ import Login from "./pages/login";
 import CriarAvaliacao from "./pages/criaravaliacao";
 import Recursos from "./pages/recursos";
 import Navbar from "./components/navbar";
-
+import Registo from "./pages/registo";
 export default function App() {
   return (
     <Router>
@@ -16,6 +16,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/recursos" element={<Recursos />} />
         <Route path="/criaravaliacao" element={<CriarAvaliacao />} />
+        <Route path="/registo" element={<Registo />} />
       </Routes>
     </Router>
   );

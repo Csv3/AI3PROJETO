@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000";
+const API_URL = "http://localhost:3000/";
 
 export const api = {
   login: async (email, password) => {
@@ -13,6 +13,21 @@ export const api = {
   listarRecursos: async (token) => {
     const res = await fetch(`${API_URL}/recursos`, {
       headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.json();
+  },
+
+  REGISTER: async (name, email, password) => {
+    const res = await fetch(`${API_URL}/auth/registo`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name, // ⬅️ O seu backend deve esperar este campo
+        email,
+        password
+      })
     });
     return res.json();
   },
