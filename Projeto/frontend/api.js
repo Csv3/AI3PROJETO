@@ -1,6 +1,8 @@
 // api.js — centraliza chamadas à API
 const API_URL = "http://localhost:5000";
 
+
+//fetch wrapper 
 async function safeFetch(path, opts = {}) {
   const headers = opts.headers || {};
   if (!headers["Content-Type"] && !(opts.body instanceof FormData)) {

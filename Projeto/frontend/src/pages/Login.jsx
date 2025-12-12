@@ -12,7 +12,7 @@ export default function Login() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-
+    //utilização do reCAPTCHA para evitar bots
     if (!recaptchaToken) {
       alert("Por favor confirma o reCAPTCHA antes de entrar.");
       return;

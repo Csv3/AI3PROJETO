@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { signToken } from "../utils/jwt.js";
 import { sanitizeInput } from "../utils/sanitize.js";
 
+//Sanitização de entrada adicionada para evitar injeção de código (REGISTO)
 export const register = async (req, res) => {
   try {
     const body = sanitizeInput(req.body);
@@ -18,7 +19,7 @@ export const register = async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 };
-
+//Sanitização de entrada adicionada para evitar injeção de código (LOGIN)
 export const login = async (req, res) => {
   try {
     const body = sanitizeInput(req.body);

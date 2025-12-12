@@ -1,5 +1,6 @@
 import multer from "multer";
 import path from "path";
+//apenas o utilizador pode fazer upload de ficheiros
 const storage = multer.diskStorage({
   destination: function (req, file, cb) { cb(null, "uploads/"); },
   filename: function (req, file, cb) {

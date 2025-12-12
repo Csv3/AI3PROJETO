@@ -8,10 +8,10 @@ import {
 } from "../controllers/recursosController.js";
 
 const router = express.Router();
-
+//RECURSOS
 router.get("/", list);
 router.post("/", auth, create);
-router.get("/pesquisa", list); // simple reuse
+router.get("/pesquisa", list);
 router.get("/:id", getOne);
 router.put("/:id", auth, update);
 router.delete("/:id", auth, remove);
